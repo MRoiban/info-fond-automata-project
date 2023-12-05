@@ -12,6 +12,7 @@ from pysat.formula import CNF, CNFPlus, IDPool
 def gen_aut(alphabet: str, pos: list[str], neg: list[str], k: int) -> DFA:
     xpool = IDPool(start_from=1)
     tpool = IDPool(start_from=1)
+    apool = IDPool(start_from=1)
     cfn = CNF()
     
     for i in range(1, k):
@@ -19,13 +20,15 @@ def gen_aut(alphabet: str, pos: list[str], neg: list[str], k: int) -> DFA:
         for j in range(1, k):
             for sigma in pos:
                 clause.append(xpool.id((i,j,sigma)))
+                clause.append(apool.id(j))
         cfn.append(clause)
     
     for i in range(1, k):
         clause = []
         for j in range(1, k):
             for sigma in neg:
-                clause.append(-xpool.id((i,j,sigma)))
+                clause.append(xpool.id((i,j,sigma)))
+                clause.append(-apool.id(j))
         cfn.append(clause)
     
     for i in range(1, k):
@@ -43,8 +46,8 @@ def gen_aut(alphabet: str, pos: list[str], neg: list[str], k: int) -> DFA:
     
     for i in range(1, k):
         for j in range(1, k):
-            for sigma in alphabet:
-                if tpool.id((i,j,sigma)) in model:
+            for sigma in pos:
+                if xpool.id((i,j,sigma)) in model:
                     print("i: ",i," | j: ",j," | sigma: ", sigma)
         cfn.append(clause)
     
