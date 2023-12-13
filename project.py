@@ -8,48 +8,45 @@ from automata.fa.nfa import NFA
 from pysat.solvers import Minisat22, Minicard
 from pysat.formula import CNF, CNFPlus, IDPool
 
+vpool = IDPool(start_from=1)
+cfn = CNF()
+
+A_ID = 1
+X_ID = 2
+T_ID = 3
+
 # Q2
 def gen_aut(alphabet: str, pos: list[str], neg: list[str], k: int) -> DFA:
-    xpool = IDPool(start_from=1)
-    tpool = IDPool(start_from=1)
-    apool = IDPool(start_from=1)
-    cfn = CNF()
+    vpool = IDPool(start_from=1)
+    cnf = CNF()
+    for sigma in pos:
+        for j in range(1, k):
+            cnf.append([-vpool.id((X_ID,j,sigma)),vpool.id((A_ID,j))])
+                
+    
+    for sigma in pos:
+        for j in range(1, k):
+            cnf.append([vpool.id((X_ID,j,sigma)),-vpool.id((A_ID,j))])
+                
     
     for i in range(1, k):
-        clause = []
         for j in range(1, k):
-            for sigma in pos:
-                clause.append(xpool.id((i,j,sigma)))
-                clause.append(apool.id(j))
-        cfn.append(clause)
-    
-    for i in range(1, k):
-        clause = []
-        for j in range(1, k):
-            for sigma in neg:
-                clause.append(xpool.id((i,j,sigma)))
-                clause.append(-apool.id(j))
-        cfn.append(clause)
-    
-    for i in range(1, k):
-        clause = []
-        for j in range(1, k):
-            for sigma in alphabet:
-                clause.append(tpool.id((i,j,sigma)))
-        cfn.append(clause)
+            for j_1 in range(1,k):
+                if j != j_1:
+                    for alpha in alphabet:
+                        cnf.append([-vpool.id((T_ID,i,j,alpha)),-vpool.id((T_ID,i,j_1,alpha))])
+       
     
     solver = Minisat22(use_timer=True)
     solver.append_formula(cfn.clauses, no_return=False)
-    print(cfn.clauses)
+    print(cnf.clauses)
     solver.solve()
     model = solver.get_model()
-    
-    for i in range(1, k):
-        for j in range(1, k):
-            for sigma in pos:
-                if xpool.id((i,j,sigma)) in model:
-                    print("i: ",i," | j: ",j," | sigma: ", sigma)
-        cfn.append(clause)
+   
+    for sigma in pos: 
+        for j in range(k):
+            if vpool.id((X_ID,j,sigma)) in model:
+                print(j)
     
     
     return None
